@@ -164,10 +164,23 @@ class ProfileViewController: UIViewController, UITextViewDelegate {
         self.present(editProfileViewController, animated: true, completion: nil)
     }
 
+//    @objc private func signOutButtonTapped() {
+//    let onboardingViewController = OnboardingViewController()
+//    self.present(onboardingViewController, animated: true, completion: nil)
+//  
+//    }
+    
     @objc private func signOutButtonTapped() {
-    let onboardingViewController = OnboardingViewController()
-    self.present(onboardingViewController, animated: true, completion: nil)
-
+        AuthService.shared.signOut { [weak self] error in
+            guard let self = self else {return }
+            if let error = error {
+                
+                return
+            }
+            if let sceneDelegate = self.view.window?.windowScene?.delegate as? SceneDelegate {
+                sceneDelegate.checkAuthentication()
+            }
+        }
     }
     
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
