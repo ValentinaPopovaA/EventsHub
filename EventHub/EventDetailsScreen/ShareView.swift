@@ -7,8 +7,12 @@
 
 import UIKit
 
+protocol ShareViewDelegate: AnyObject {
+    func dismissOverlay()
+}
 class ShareView: UIView {
     
+    var delegate: ShareViewDelegate?
     let title: UILabel = {
         let label = UILabel()
         label.text = "Share with friends"
@@ -72,7 +76,7 @@ class ShareView: UIView {
         button.setTitleColor(.darkText, for: .normal)
         button.backgroundColor = .greyLight
         button.layer.cornerRadius = 15
-        button.addTarget(self, action: #selector(cancelButtonPressed), for: .touchUpInside)
+        button.addTarget(self, action: #selector(dismissOverlay), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -90,9 +94,6 @@ class ShareView: UIView {
     }
     @objc func buttonsPressed(_ sender: UIButton) {
        print(sender)
-    }
-    @objc func cancelButtonPressed(_ sender: UIButton) {
-        self.isHidden = true
     }
 
        func configUI() {
@@ -135,4 +136,10 @@ class ShareView: UIView {
             cancelButton.heightAnchor.constraint(equalToConstant: 58)
            ])
        }
+}
+
+private extension ShareView {
+    @objc func dismissOverlay() {
+        delegate?.dismissOverlay()
+    }
 }

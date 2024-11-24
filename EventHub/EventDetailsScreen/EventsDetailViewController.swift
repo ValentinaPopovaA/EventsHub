@@ -12,6 +12,7 @@ class EventsDetailViewController: UIViewController {
     private let eventService = EventService()
     private let eventID: Int = 125725
     
+    private var overlayView: UIView?
     private let shareView: ShareView = {
         let view = ShareView()
         view.contentMode = .bottom
@@ -186,6 +187,7 @@ class EventsDetailViewController: UIViewController {
         makeConstraits()
         makeAttributedText()
         shareView.isHidden = true
+        shareView.delegate = self
         loadEventDetails(eventID: eventID)
     }
     
@@ -285,19 +287,39 @@ class EventsDetailViewController: UIViewController {
     }
     
     @objc private func sharePressedButton(_ sender: UIButton) {
-        view.backgroundColor = .gray.withAlphaComponent(0.8)
-        imageView.backgroundColor = .gray.withAlphaComponent(0.5)
-        saveButton.backgroundColor = .gray.withAlphaComponent(0.1)
-        dateView.backgroundColor = .gray.withAlphaComponent(0.1)
-        locationView.backgroundColor = .gray.withAlphaComponent(0.1)
-//        let overlay = UIView(frame: view.bounds)
-//            overlay.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-//            overlay.tag = 999 // Чтобы потом можно было легко удалить
-//            view.addSubview(overlay)
+        shareView.isHidden = false
         shareButton.isHidden.toggle()
-        shareView.isHidden.toggle()
+        // Создаем затемняющий слой
+        let overlay = UIView()
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.isUserInteractionEnabled = true
+        view.addSubview(overlay)
+        self.overlayView = overlay
+
+        // Настраиваем Auto Layout для overlay
+        NSLayoutConstraint.activate([
+            overlay.topAnchor.constraint(equalTo: view.topAnchor),
+            overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+        
+        // Добавляем ShareView поверх overlay
+        view.addSubview(shareView)
+        NSLayoutConstraint.activate([
+            shareView.heightAnchor.constraint(equalToConstant: 370),
+            shareView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            shareView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            shareView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+        UIView.animate(withDuration: 0.3) {
+            overlay.alpha = 1
+            self.shareView.transform = .identity
+        }
     }
-    
+        
     private func setupUI() {
         view.backgroundColor = .systemBackground
         view.addSubview(imageView)
@@ -413,3 +435,23 @@ class EventsDetailViewController: UIViewController {
         ])
     }
 }
+
+extension EventsDetailViewController: ShareViewDelegate {
+    // Скрытие ShareView и overlay
+    @objc func dismissOverlay() {
+        shareButton.isHidden = false
+        if let overlayView = overlayView {
+            dismissShareView(overlayView: overlayView)
+        }
+    }
+    private func dismissShareView(overlayView: UIView) {
+        UIView.animate(withDuration: 0.3, animations: {
+            overlayView.alpha = 0
+            self.shareView.transform = CGAffineTransform(translationX: 0, y: 350)
+        }) { _ in
+            overlayView.removeFromSuperview()
+            self.overlayView = nil
+        }
+    }
+}
+
