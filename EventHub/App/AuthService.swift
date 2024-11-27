@@ -13,7 +13,7 @@ class AuthService {
     
     public static let shared = AuthService()
     private init() {}
-
+    
     
     /// метод регистрации пользователя
     /// - Parameters:
@@ -86,8 +86,48 @@ class AuthService {
         
     }
     
+    
+    
+    public func fetchUserName(completion: @escaping(String?) -> Void) {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            completion(nil)
+            return
+            
+        }
+        let db = Firestore.firestore()
+        db.collection("users").document(uid).getDocument { document, error in
+            if let error = error {
+                print("Ошибка получения данных: \(error)")
+                completion(nil)
+            } else if let document = document, document.exists {
+                let data = document.data()
+                let username = data?["username"] as? String
+                completion(username)
+            } else {
+                completion(nil)
+            }
+        }
+    }
+    
+    
+    public func updateUserNameForFB(newUsername: String, completion: @escaping (Bool, Error?) -> Void) {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            completion(false, nil)
+            return
+        }
+        
+        let db = Firestore.firestore()
+        db.collection("users").document(uid).updateData([
+            "username" : newUsername]) { error in
+                if let error = error {
+                    completion(false, error)
+                } else {
+                    completion(true, nil)
+                }
+                
+            }
+    }
+    
 }
-
-
 
 

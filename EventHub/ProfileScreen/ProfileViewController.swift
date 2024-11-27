@@ -42,7 +42,7 @@ class ProfileViewController: UIViewController, UITextViewDelegate {
     }()
     
     private lazy var nameLabel: UILabel = UILabel.makeCustomLabel(
-        text: "Ashfak Sayem",
+        text: "",
         font: .systemFont(ofSize: 24, weight: .regular),
         textColor: .black,
         numberOfLines: 1,
@@ -96,10 +96,21 @@ class ProfileViewController: UIViewController, UITextViewDelegate {
         view.backgroundColor = .white
         aboutMeTextView.delegate = self
         setupUI()
-        
+        updateProfileData()
+       
     }
     
     //MARK: - Setup UI
+    
+    func updateProfileData() {
+        
+        AuthService.shared.fetchUserName { [weak self] username in
+            guard let self = self else {return}
+            DispatchQueue.main.async {
+                self.nameLabel.text = username ?? "Алёша"
+            }
+        }
+    }
     
     private func setupUI() {
         view.addSubview(profileImageView)

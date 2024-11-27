@@ -6,6 +6,9 @@
 //
 
 import UIKit
+import FirebaseCore
+import GoogleSignIn
+import FirebaseAuth
 
 class SignUpViewController: UIViewController {
     
@@ -50,6 +53,8 @@ class SignUpViewController: UIViewController {
         
         setupUI()
         self.signInButton.addTarget(self, action: #selector(signInButtonTapped), for: .touchUpInside)
+        self.navigationController?.navigationBar.isHidden = false
+        configurateNavigationBar(title: "Sign up", backAction: #selector(didTapBack))
         
         
     }
@@ -163,8 +168,48 @@ class SignUpViewController: UIViewController {
     }
     
     
+    @objc private func didTapBack() {
+        navigationController?.popViewController(animated: true)
+    }
+    
     @objc func googleButtonTapped() {
         print("Google Up button tapped!")
+        
+        print("Google button tapped!")
+        //        let webView = WebViewerController(with: "https://www.google.ru/")
+        //        let nav = UINavigationController(rootViewController: webView)
+        //        self.present(nav, animated: true, completion: nil)
+        
+        
+        guard let clientID = FirebaseApp.app()?.options.clientID else { return }
+
+        // Create Google Sign In configuration object.
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+
+        GIDSignIn.sharedInstance.signIn(withPresenting: self) { [weak self] result, error in
+            guard let _ = result, error == nil else {return}
+
+          guard let user = result?.user,
+                let idToken = user.idToken?.tokenString else {return}
+            self?.signInWithGoogle(idToken: idToken, accessToken: user.accessToken.tokenString)
+          
+        }
+    }
+    
+    func signInWithGoogle(idToken: String, accessToken: String ) {
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
+        
+        Auth.auth().signIn(with: credential) { result, error in
+            guard let _ = result, error == nil else {return}
+            self.openVC()
+        }
+    }
+    
+    private func openVC() {
+        let vc = ExploreViewController()
+        self.navigationController?.pushViewController(vc, animated: true)
+    
         
     }
     
@@ -173,15 +218,12 @@ class SignUpViewController: UIViewController {
         
         print("Sign Up Button tapped!")
         let vc = LoginViewController()
-        
         self.navigationController?.pushViewController(vc, animated: true)
-//        vc.modalPresentationStyle = .fullScreen
-//        self.present(vc, animated: true, completion: nil)
+
     }
     
     // MARK: - UITextFieldDelegate
-    
-    
+
 }
 
 

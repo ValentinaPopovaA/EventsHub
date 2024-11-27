@@ -6,6 +6,9 @@
 //
 
 import UIKit
+import GoogleSignIn
+import FirebaseCore
+import FirebaseAuth
 
 class LoginViewController: UIViewController {
     
@@ -195,12 +198,46 @@ class LoginViewController: UIViewController {
         }
     }
     
+    
+
     @objc func googleButtonTapped() {
         print("Google button tapped!")
-        let webView = WebViewerController(with: "https://www.google.ru/")
-        let nav = UINavigationController(rootViewController: webView)
-        self.present(nav, animated: true, completion: nil)
+        //        let webView = WebViewerController(with: "https://www.google.ru/")
+        //        let nav = UINavigationController(rootViewController: webView)
+        //        self.present(nav, animated: true, completion: nil)
+        
+        
+        guard let clientID = FirebaseApp.app()?.options.clientID else { return }
+
+        // Create Google Sign In configuration object.
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+
+        GIDSignIn.sharedInstance.signIn(withPresenting: self) { [weak self] result, error in
+            guard let _ = result, error == nil else {return}
+
+          guard let user = result?.user,
+                let idToken = user.idToken?.tokenString else {return}
+            self?.signInWithGoogle(idToken: idToken, accessToken: user.accessToken.tokenString)
+          
+        }
     }
+    
+    func signInWithGoogle(idToken: String, accessToken: String ) {
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
+        
+        Auth.auth().signIn(with: credential) { result, error in
+            guard let _ = result, error == nil else {return}
+            self.openVC()
+        }
+    }
+    
+    private func openVC() {
+        let vc = TabBarController()
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    
     
     @objc func forgotButtonTapped() {
         print("forgotButton tapped!")
@@ -212,7 +249,6 @@ class LoginViewController: UIViewController {
     @objc func signUpButtonTapped() {
         print("Sign Up Button tapped!")
         let vc = SignUpViewController()
-       
         self.navigationController?.pushViewController(vc, animated: true)
         
     }

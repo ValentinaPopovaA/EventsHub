@@ -35,12 +35,15 @@ class RessetViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.setupUI()
-        self.title = "Resset Password"
+        
+        configurateNavigationBar(title: "Resset Password", backAction: #selector(didTapBack))
+   
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.navigationController?.navigationBar.isHidden = false
+        
     }
     
     
@@ -78,11 +81,13 @@ class RessetViewController: UIViewController {
             sendButton.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -52),
         ])
     }
-    
-    
-    
-    
+        
+            
     // MARK: - Selectors
+    
+    @objc private func didTapBack() {
+        navigationController?.popViewController(animated: true)
+    }
     
     @objc func SendButtonTapped() {
         print("Send button tapped!")

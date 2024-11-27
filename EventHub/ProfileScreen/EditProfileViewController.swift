@@ -126,7 +126,14 @@ class EditProfileViewController: UIViewController {
     
     private func loadUserData() {
         let defaults = UserDefaults.standard
-        nameLabel.text = defaults.string(forKey: "userName") ?? "Your name"
+        
+        AuthService.shared.fetchUserName { [weak self] username in
+            guard let self = self else {return}
+            DispatchQueue.main.async {
+                self.nameLabel.text = username ?? "Алёша"
+            }
+        }
+//        nameLabel.text = /*defaults.string(forKey: "userName") ?? "Your name"*/
         aboutMeTextView.text = defaults.string(forKey: "userAbout") ?? "Enjoy your favorite dish and a lovely time with your friends and family and have a great time. Food from local food trucks will be available for purchase"
 
     }
@@ -143,7 +150,15 @@ class EditProfileViewController: UIViewController {
                 if !newName .isEmpty {
                     self.nameLabel.text = newName
                     
-                    UserDefaults.standard.set(newName, forKey: "userName")
+                    
+                    AuthService.shared.updateUserNameForFB(newUsername: newName) { success, error in
+                        if success {
+                            print("Имя успешно обновлено!")
+                        } else if let error = error {
+                            print("Ошибка обновления имени: \(error.localizedDescription)")
+                        }
+                    }
+//                    UserDefaults.standard.set(newName, forKey: "userName")
                 }
                 
             }
@@ -152,6 +167,7 @@ class EditProfileViewController: UIViewController {
         alert.addAction(saveAction)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
+        
         
     }
     
